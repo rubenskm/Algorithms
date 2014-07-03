@@ -39,14 +39,16 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NullPointerException();
         }
 
-        if (isEmpty()) {
-            FillInitialNode(item);
+        Node old = head;
+        head = new Node();
+        head.item = item;
+        head.next = old;
+        size++;
+
+        if (size == 1) {
+            tail = head;
         } else {
-            Node old = head;
-            head = new Node();
-            head.item = item;
-            head.next = old;
-            size++;
+            old.prev = head;
         }
     }
 
@@ -56,14 +58,16 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NullPointerException();
         }
 
-        if (isEmpty()) {
-            FillInitialNode(item);
+        Node old = tail;
+        tail = new Node();
+        tail.item = item;
+        tail.prev = old;
+        size++;
+
+        if (size == 1) {
+            head = tail;
         } else {
-            Node old = tail;
-            tail = new Node();
-            tail.item = item;
-            tail.prev = old;
-            size++;
+            old.next = tail;
         }
     }
 
@@ -73,11 +77,19 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NoSuchElementException();
         }
 
-        Node first = head;
-        head = first.next;
+        Item first = head.item;
+
+        if (size == 1) {
+            head = null;
+            tail = null;
+        } else {
+            head = head.next;
+            head.prev = null;
+        }
+
         size--;
 
-        return first.item;
+        return first;
     }
 
     // delete and return the item at the end
@@ -86,11 +98,18 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NoSuchElementException();
         }
 
-        Node last = tail;
-        tail = last.prev;
-        size--;
+        Item last = tail.item;
 
-        return last.item;
+        if (size == 1) {
+            head = null;
+            tail = null;
+        } else {
+            tail = tail.prev;
+            tail.next = null;
+        }
+
+        size--;
+        return last;
     }
 
     // return an iterator over items in order from front to end
@@ -98,22 +117,14 @@ public class Deque<Item> implements Iterable<Item> {
         return new ListIterator();
     }
 
-    private void FillInitialNode(Item item) {
-        head = new Node();
-        head.item = item;
-        head.next = null;
-        head.prev = null;
-        tail = head;
-        size++;
-    }
-
     private class Node {
-        Item item;
-        Node next;
-        Node prev;
+
+        private Node prev;
+        private Item item;
+        private Node next;
     }
 
-    public class ListIterator implements Iterator<Item> {
+    private class ListIterator implements Iterator<Item> {
 
         //Your deque implementation must support each deque operation in constant worst-case time and use space proportional
         // to the number of items currently in the deque. Additionally, your iterator implementation must support
@@ -126,7 +137,7 @@ public class Deque<Item> implements Iterable<Item> {
         }
 
         public boolean hasNext() {
-            return current.next != null;
+            return current != null;
         }
 
         public Item next() {
