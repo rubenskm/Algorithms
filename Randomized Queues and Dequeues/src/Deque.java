@@ -39,17 +39,18 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NullPointerException();
         }
 
-        Node old = head;
-        head = new Node();
-        head.item = item;
-        head.next = old;
-        size++;
+        Node newHead = new Node();
+        newHead.item = item;
 
-        if (size == 1) {
-            tail = head;
+        if (size == 0) {
+            tail = newHead;
+            head = newHead;
         } else {
-            old.prev = head;
+            head.prev = newHead;
+            newHead.next = head;
+            head = newHead;
         }
+        size++;
     }
 
     // insert the item at the end
@@ -58,17 +59,18 @@ public class Deque<Item> implements Iterable<Item> {
             throw new NullPointerException();
         }
 
-        Node old = tail;
-        tail = new Node();
-        tail.item = item;
-        tail.prev = old;
-        size++;
+        Node newTail = new Node();
+        newTail.item = item;
 
-        if (size == 1) {
-            head = tail;
+        if (size == 0) {
+            tail = newTail;
+            head = newTail;
         } else {
-            old.next = tail;
+            tail.next = newTail;
+            newTail.prev = tail;
+            tail = newTail;
         }
+        size++;
     }
 
     // delete and return the item at the front
