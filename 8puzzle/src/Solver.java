@@ -1,9 +1,12 @@
 public class Solver {
 
+    private int move = 0;
+    private MinPQ<Node> minPQ;
+    private Queue<Board> solution = new Queue<Board>();
+
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial)
     {
-
         /*
         First, insert the initial search node (the initial board, 0 moves, and a null previous search node) into a priority
         queue.
@@ -14,35 +17,40 @@ public class Solver {
         Repeat this procedure until the search node dequeued corresponds to a goal board.
 
         The success of this approach hinges on the choice of priority function for a search node.
+        */
 
-         */
-        MinPQ<Node> minPQ = new MinPQ<Node>();
+        minPQ = new MinPQ<Node>();
         minPQ.insert(new Node(initial, 0, null));
-
-        Queue<Board> queues = (Queue<Board>) initial.neighbors();
-
-        for (Node node : minPQ)
+        Node previousSearchNode = minPQ.delMin();
+        solution.enqueue(previousSearchNode.board);
+        while(!previousSearchNode.board.isGoal())
         {
+            Queue<Board> queues = (Queue<Board>) previousSearchNode.board.neighbors();
 
+            for (Board board : queues)
+            {
+                if (!board.equals(previousSearchNode.board))
+                    minPQ.insert(new Node(board, move, previousSearchNode));
+            }
+            previousSearchNode = minPQ.delMin();
+            solution.enqueue(previousSearchNode.board);
+            move++;
         }
-        //todo:
     }
 
     // is the initial board solvable?
     public boolean isSolvable()
     {
-        //todo
         return true;
     }
 
     // min number of moves to solve initial board; -1 if no solution
     public int moves()
     {
-        //todo
-        return -1;
+        return move;
     }
 
-    private class Node
+    private class Node implements Comparable<Node>
     {
         Board board;
         int moves;
@@ -53,13 +61,31 @@ public class Solver {
             this.moves = moves;
             this.previousSearchNode = node;
         }
+
+        public int compareTo(Node node) {
+            int result;
+
+            if (this.board.hamming() < node.board.hamming()) {
+                result = -1;
+            } else if (this.board.hamming() > node.board.hamming()) {
+                result = 1;
+            } else if (this.board.manhattan() < node.board.manhattan()) {
+                result = -1;
+            } else if (this.board.manhattan() > node.board.manhattan()) {
+                result = 1;
+            }
+            else {
+                result = 0;
+            }
+
+            return result;
+        }
     }
 
     // sequence of boards in a shortest solution; null if no solution
     public Iterable<Board> solution()
     {
-        //todo
-        return null;
+        return solution;
     }
 
     public static void main(String[] args) {

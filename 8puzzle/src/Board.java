@@ -81,7 +81,7 @@ public class Board {
     // is this board the goal board?
     public boolean isGoal()
     {
-        return tiles.equals(goalTiles);
+        return hamming() == 0;
     }
 
     // a board obtained by exchanging two adjacent blocks in the same row
@@ -106,12 +106,12 @@ public class Board {
     public boolean equals(Object y)
     {
         //todo: checar se está ok a comparacao
-        if (y == this.tiles) return true;
+        if (y == tiles) return true;
         if (y == null) return false;
         if (y.getClass() != this.getClass()) return false;
 
-        int[][] array = (int[][]) y;
-        return Arrays.deepEquals(this.tiles, array);
+        Board board = (Board) y;
+        return Arrays.deepEquals(tiles, board.tiles);
     }
 
     // all neighboring boards
@@ -133,17 +133,9 @@ public class Board {
 
     private Queue<Board> CheckNeighbors(Queue<Board> queues, int x, int y) {
         //If the index not outside array and not reach goal
-        /*
-        if (!(x < 0) && !(x >= N) &&
-            !(y < 0) && !(y >= N) &&
-            tiles[x][y] != goalTiles[x][y]){
-            */
+        if (!(x < 0) && !(x >= N) && !(y < 0) && !(y >= N)) {
 
-        if (!(x < 0) && !(x >= N) &&
-                !(y < 0) && !(y >= N) &&
-                tiles[x][y] != goalTiles[x][y]){
-
-            int[][] tilesAux = tiles.clone();
+            int[][] tilesAux = cloneArray(tiles);
             int aux = tilesAux[emptySpaceX][emptySpaceY];
             tilesAux[emptySpaceX][emptySpaceY] = tilesAux[x][y];
             tilesAux[x][y] = aux;
@@ -164,5 +156,14 @@ public class Board {
             s.append("\n");
         }
         return s.toString();
+    }
+
+    public static int[][] cloneArray(int[][] src) {
+        int length = src.length;
+        int[][] target = new int[length][src[0].length];
+        for (int i = 0; i < length; i++) {
+            System.arraycopy(src[i], 0, target[i], 0, src[i].length);
+        }
+        return target;
     }
 }
