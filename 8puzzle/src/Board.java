@@ -11,19 +11,18 @@ public class Board {
 
     // construct a board from an N-by-N array of blocks
     // (where blocks[i][j] = block in row i, column j)
-    public Board(int[][] blocks)
-    {
+    public Board(int[][] blocks) {
         this.tiles = blocks;
         this.N = tiles[0].length;
         goalTiles = new int[N][N];
 
         //Create goal array
         int count = 1;
-        for (int i = 0; i < N; i++){
+        for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
 
                 //Memorize position for empty space in tiles
-                if (tiles[i][j] == 0){
+                if (tiles[i][j] == 0) {
                     emptySpaceX = i;
                     emptySpaceY = j;
                 }
@@ -37,20 +36,18 @@ public class Board {
     }
 
     // board dimension N
-    public int dimension()
-    {
+    public int dimension() {
         return N;
     }
 
     // number of blocks out of place
-    public int hamming()
-    {
+    public int hamming() {
         int count = 0;
-        for (int i = 0; i < N; i++){
+        for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                if (tiles[i][j] != goalTiles[i][j]){
+                if (tiles[i][j] != goalTiles[i][j]) {
                     //not count space as block
-                    if (tiles[i][j] == 0) break;
+                    if (tiles[i][j] == 0) continue;
                     count++;
                 }
             }
@@ -59,9 +56,8 @@ public class Board {
     }
 
     // sum of Manhattan distances between blocks and goal
-    public int manhattan()
-    {
-        if (manhattan != -1) {
+    public int manhattan() {
+        if (manhattan == -1) {
             int sum = 0;
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
@@ -70,7 +66,7 @@ public class Board {
                             if (tiles[i][j] == goalTiles[k][l]) {
 
                                 //not count space as block
-                                if (tiles[i][j] == 0) break;
+                                if (tiles[i][j] == 0) continue;
                                 sum += Math.abs((i + j) - (k + l));
                             }
                         }
@@ -79,29 +75,25 @@ public class Board {
             }
             manhattan = sum;
             return sum;
-        }
-        else
+        } else {
             return manhattan;
-
+        }
     }
 
     // is this board the goal board?
-    public boolean isGoal()
-    {
+    public boolean isGoal() {
         return hamming() == 0;
     }
 
     // a board obtained by exchanging two adjacent blocks in the same row
-    public Board twin()
-    {
+    public Board twin() {
         Board twin = new Board(tiles);
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                if (twin.tiles[i][j] != 0 && twin.tiles[i + 1][ j + 1] != 0)
-                {
+        for (int i = 1; i < N; i++) {
+            for (int j = 1; j < N; j++) {
+                if (twin.tiles[i - 1][j - 1] != 0 && twin.tiles[i][j] != 0) {
                     int aux = twin.tiles[i][j];
-                    twin.tiles[i][j] = twin.tiles[i + 1][ j + 1];
-                    twin.tiles[i + 1][ j + 1] = aux;
+                    twin.tiles[i - 1][j - 1] = twin.tiles[i][j];
+                    twin.tiles[i][j] = aux;
                 }
             }
         }
@@ -110,10 +102,8 @@ public class Board {
     }
 
     // does this board equal y?
-    public boolean equals(Object y)
-    {
-        //todo: checar se está ok a comparacao
-        if (y == tiles) return true;
+    public boolean equals(Object y) {
+        if (y == this) return true;
         if (y == null) return false;
         if (y.getClass() != this.getClass()) return false;
 
@@ -122,23 +112,22 @@ public class Board {
     }
 
     // all neighboring boards
-    public Iterable<Board> neighbors()
-    {
+    public Iterable<Board> neighbors() {
         Queue<Board> queues = new Queue<Board>();
 
         //left
-        queues = CheckNeighbors(queues, emptySpaceX, emptySpaceY - 1);
+        queues = checkNeighbors(queues, emptySpaceX, emptySpaceY - 1);
         //Up
-        queues = CheckNeighbors(queues, emptySpaceX - 1, emptySpaceY);
+        queues = checkNeighbors(queues, emptySpaceX - 1, emptySpaceY);
         //Right
-        queues = CheckNeighbors(queues, emptySpaceX , emptySpaceY + 1);
+        queues = checkNeighbors(queues, emptySpaceX, emptySpaceY + 1);
         //Down
-        queues = CheckNeighbors(queues, emptySpaceX + 1, emptySpaceY);
+        queues = checkNeighbors(queues, emptySpaceX + 1, emptySpaceY);
 
         return queues;
     }
 
-    private Queue<Board> CheckNeighbors(Queue<Board> queues, int x, int y) {
+    private Queue<Board> checkNeighbors(Queue<Board> queues, int x, int y) {
         //If the index not outside array and not reach goal
         if (!(x < 0) && !(x >= N) && !(y < 0) && !(y >= N)) {
 
@@ -165,7 +154,7 @@ public class Board {
         return s.toString();
     }
 
-    public static int[][] cloneArray(int[][] src) {
+    private static int[][] cloneArray(int[][] src) {
         int length = src.length;
         int[][] target = new int[length][src[0].length];
         for (int i = 0; i < length; i++) {
