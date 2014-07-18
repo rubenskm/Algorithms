@@ -7,6 +7,7 @@ public class Board {
     private final int N;
     private int emptySpaceX;
     private int emptySpaceY;
+    private int manhattan = -1;
 
     // construct a board from an N-by-N array of blocks
     // (where blocks[i][j] = block in row i, column j)
@@ -60,22 +61,28 @@ public class Board {
     // sum of Manhattan distances between blocks and goal
     public int manhattan()
     {
-        int sum = 0;
-        for (int i = 0; i < N; i++){
-            for (int j = 0; j < N; j++) {
-                for (int k = 0; k < N; k++) {
-                    for (int l = 0; l < N; l++) {
-                        if (tiles[i][j] == goalTiles[k][l]) {
+        if (manhattan != -1) {
+            int sum = 0;
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    for (int k = 0; k < N; k++) {
+                        for (int l = 0; l < N; l++) {
+                            if (tiles[i][j] == goalTiles[k][l]) {
 
-                            //not count space as block
-                            if (tiles[i][j] == 0) break;
-                            sum += Math.abs((i + j) - (k + l));
+                                //not count space as block
+                                if (tiles[i][j] == 0) break;
+                                sum += Math.abs((i + j) - (k + l));
+                            }
                         }
                     }
                 }
             }
+            manhattan = sum;
+            return sum;
         }
-        return sum;
+        else
+            return manhattan;
+
     }
 
     // is this board the goal board?
