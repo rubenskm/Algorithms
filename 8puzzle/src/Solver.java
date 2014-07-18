@@ -44,7 +44,7 @@ public class Solver {
 
     // min number of moves to solve initial board; -1 if no solution
     public int moves() {
-        return previousSearchNode.moves;
+        return previousSearchNode.getMoves();
     }
 
     private static class Node implements Comparable<Node> {
@@ -61,10 +61,6 @@ public class Solver {
             return moves;
         }
 
-        public Node getPreviousSearchNode() {
-            return previousSearchNode;
-        }
-
         private Node(Board board, int moves, Node node) {
             this.board = board;
             this.moves = moves;
@@ -78,12 +74,14 @@ public class Solver {
                 result = -1;
             } else if (this.board.hamming() > node.board.hamming()) {
                 result = 1;
-            } else if (this.board.manhattan() < node.board.manhattan()) {
-                result = -1;
-            } else if (this.board.manhattan() > node.board.manhattan()) {
-                result = 1;
             } else {
-                result = 0;
+                if (this.board.manhattan() < node.board.manhattan()) {
+                    result = -1;
+                } else if (this.board.manhattan() > node.board.manhattan()) {
+                    result = 1;
+                } else {
+                    result = 0;
+                }
             }
 
             return result;
@@ -105,7 +103,6 @@ public class Solver {
                 blocks[i][j] = in.readInt();
         Board initial = new Board(blocks);
 
-        Board twin = initial.twin();
         // solve the puzzle
         Solver solver = new Solver(initial);
 
