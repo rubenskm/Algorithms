@@ -62,14 +62,17 @@ public class Board {
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
                     for (int k = 0; k < N; k++) {
+                        if (tiles[i][j] == goalTiles[i][j]) continue;
+
                         for (int l = 0; l < N; l++) {
                             if (tiles[i][j] == goalTiles[k][l]) {
 
                                 //not count space as block
                                 if (tiles[i][j] == 0) continue;
-                                sum += Math.abs((i + j) - (k + l));
+                                sum += Math.abs(i - k) + Math.abs(j - l);
                             }
                         }
+
                     }
                 }
             }
@@ -87,18 +90,19 @@ public class Board {
 
     // a board obtained by exchanging two adjacent blocks in the same row
     public Board twin() {
-        Board twin = new Board(tiles);
-        for (int i = 1; i < N; i++) {
-            for (int j = 1; j < N; j++) {
-                if (twin.tiles[i - 1][j - 1] != 0 && twin.tiles[i][j] != 0) {
-                    int aux = twin.tiles[i][j];
-                    twin.tiles[i - 1][j - 1] = twin.tiles[i][j];
-                    twin.tiles[i][j] = aux;
-                }
-            }
+
+        int [][] twin = cloneArray(tiles);
+        int line = 0;
+
+        if (emptySpaceX == 0) {
+            line = 1;
         }
 
-        return twin;
+        int aux = twin[line][0];
+        twin[line][0] = twin[line][1];
+        twin[line][1] = aux;
+
+        return new Board(twin);
     }
 
     // does this board equal y?

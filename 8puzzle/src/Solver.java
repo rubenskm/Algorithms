@@ -2,7 +2,6 @@ public class Solver {
 
     private MinPQ<Node> minPQ;
     private Queue<Board> solution = new Queue<Board>();
-    private Board board;
     private Node previousSearchNode;
 
     // find a solution to the initial board (using the A* algorithm)
@@ -19,21 +18,20 @@ public class Solver {
         The success of this approach hinges on the choice of priority function for a search node.
         */
 
-        int move = 0;
-        board = initial;
+        int move = 1;
         minPQ = new MinPQ<Node>();
         minPQ.insert(new Node(initial, 0, null));
         previousSearchNode = minPQ.delMin();
-        solution.enqueue(previousSearchNode.board);
-        while (!previousSearchNode.board.isGoal()) {
-            Queue<Board> queues = (Queue<Board>) previousSearchNode.board.neighbors();
+        solution.enqueue(previousSearchNode.getBoard());
+        while (!previousSearchNode.getBoard().isGoal()) {
+            Queue<Board> queues = (Queue<Board>) previousSearchNode.getBoard().neighbors();
 
             for (Board board : queues) {
-                if (!board.equals(previousSearchNode.board))
+                if (!board.equals(previousSearchNode.getBoard()))
                     minPQ.insert(new Node(board, move, previousSearchNode));
             }
             previousSearchNode = minPQ.delMin();
-            solution.enqueue(previousSearchNode.board);
+            solution.enqueue(previousSearchNode.getBoard());
             move++;
         }
     }
@@ -50,9 +48,22 @@ public class Solver {
     }
 
     private static class Node implements Comparable<Node> {
-        public Board board;
-        public int moves;
-        public Node previousSearchNode;
+
+        private Board board;
+        private int moves;
+        private Node previousSearchNode;
+
+        public Board getBoard() {
+            return board;
+        }
+
+        public int getMoves() {
+            return moves;
+        }
+
+        public Node getPreviousSearchNode() {
+            return previousSearchNode;
+        }
 
         private Node(Board board, int moves, Node node) {
             this.board = board;
@@ -94,6 +105,7 @@ public class Solver {
                 blocks[i][j] = in.readInt();
         Board initial = new Board(blocks);
 
+        Board twin = initial.twin();
         // solve the puzzle
         Solver solver = new Solver(initial);
 
