@@ -3,11 +3,11 @@ import java.util.Arrays;
 public class Board {
 
     private final byte[][] tiles;
-    private byte[][] goalTiles;
     private final int N;
     private int emptySpaceX;
     private int emptySpaceY;
     private int manhattan = -1;
+    private int hamming = -1;
 
     // construct a board from an N-by-N array of blocks
     // (where blocks[i][j] = block in row i, column j)
@@ -25,11 +25,7 @@ public class Board {
         initialSetup();
     }
 
-    private void initialSetup()
-    {
-        goalTiles = new byte[N][N];
-        //Create goal array
-        byte count = 1;
+    private void initialSetup() {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
 
@@ -38,32 +34,17 @@ public class Board {
                     emptySpaceX = i;
                     emptySpaceY = j;
                 }
-
-                //Set values for goal
-                this.goalTiles[i][j] = count;
-                count++;
             }
         }
-        this.goalTiles[N - 1][N - 1] = 0;
     }
 
-    private byte[][] convertIntToByte(byte[][] tiles, int[][] blocks) {
+    private byte[][] convertIntToByte(byte[][] _tiles, int[][] blocks) {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                tiles[i][j] = (byte) blocks[i][j];
+                _tiles[i][j] = (byte) blocks[i][j];
             }
         }
-        return tiles;
-    }
-
-    private int[][] convertByteToInt(byte[][] tiles) {
-        int [][] aux = new int[N][N];
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                aux[i][j] = (int) tiles[i][j];
-            }
-        }
-        return aux;
+        return _tiles;
     }
 
     // board dimension N
@@ -73,40 +54,43 @@ public class Board {
 
     // number of blocks out of place
     public int hamming() {
-        int count = 0;
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                if (tiles[i][j] != goalTiles[i][j]) {
-                    //not count space as block
-                    if (tiles[i][j] == 0) continue;
-                    count++;
+        if (hamming == -1) {
+
+            int count = 0;
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    //compare with correct goal value in current position
+                    if (tiles[i][j] != 0 && tiles[i][j] != i * N + j + 1) {
+                        count++;
+                    }
                 }
             }
+
+            hamming = count;
+            return count;
+        } else {
+            return hamming;
         }
-        return count;
     }
 
     // sum of Manhattan distances between blocks and goal
     public int manhattan() {
         if (manhattan == -1) {
+
             int sum = 0;
+            int x,y;
+
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    for (int k = 0; k < N; k++) {
-                        if (tiles[i][j] == goalTiles[i][j]) continue;
-
-                        for (int l = 0; l < N; l++) {
-                            if (tiles[i][j] == goalTiles[k][l]) {
-
-                                //not count space as block
-                                if (tiles[i][j] == 0) continue;
-                                sum += Math.abs(i - k) + Math.abs(j - l);
-                            }
-                        }
-
+                    if(tiles[i][j] != 0) {
+                        //Get the position where could store the values when reach goal
+                        x = (tiles[i][j] - 1) / N;
+                        y = (tiles[i][j] - 1) % N;
+                        sum += Math.abs(x - i) + Math.abs(y - j);
                     }
                 }
             }
+
             manhattan = sum;
             return sum;
         } else {
@@ -176,20 +160,32 @@ public class Board {
         return queues;
     }
 
+    private Queue<Board> checkNeighbors(Queue<Board> queues, int x, int y) {
+        //If the index not outside array and not reach goal
+        if (!(x < 0) && !(x >= N) && !(y < 0) && !(y >= N)) {
+
+            byte[][] tilesAux = cloneArray(tiles);
+            byte aux = tilesAux[emptySpaceX][emptySpaceY];
+            tilesAux[emptySpaceX][emptySpaceY] = tilesAux[x][y];
+            tilesAux[x][y] = aux;
+            Board board = new Board(tilesAux);
+            queues.enqueue(board);
+        }
+        return queues;
+    }
+
     // string representation of the board (in the output format specified below)
     public String toString() {
         StringBuilder s = new StringBuilder();
         s.append(N + "\n");
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                s.append(String.format("%2x ", tiles[i][j]));
+                s.append(String.format("%2d ", tiles[i][j]));
             }
             s.append("\n");
         }
         return s.toString();
-    }
-
-    private static byte[][] cloneArray(byte[][] src) {
+    }    private static byte[][] cloneArray(byte[][] src) {
         int length = src.length;
         byte[][] target = new byte[length][src[0].length];
         for (int i = 0; i < length; i++) {

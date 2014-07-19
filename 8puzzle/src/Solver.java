@@ -1,8 +1,8 @@
 public class Solver {
 
-    private MinPQ<Node> minPQ;
-    private Queue<Board> solution = new Queue<Board>();
-    private Node previousSearchNode;
+    private Node[] lastNode;
+    private boolean isGoal;
+    private int turn;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -18,79 +18,42 @@ public class Solver {
         The success of this approach hinges on the choice of priority function for a search node.
         */
 
-        int move = 1;
-        minPQ = new MinPQ<Node>();
+        isGoal = false;
+
+        MinPQ<Node> minPQ = new MinPQ<Node>();
+        MinPQ<Node> minTwinPQ = new MinPQ<Node>();
+
         minPQ.insert(new Node(initial, 0, null));
-        previousSearchNode = minPQ.delMin();
-        solution.enqueue(previousSearchNode.getBoard());
-        while (!previousSearchNode.getBoard().isGoal()) {
-            Queue<Board> queues = (Queue<Board>) previousSearchNode.getBoard().neighbors();
+        minTwinPQ.insert(new Node(initial, 0, null));
 
-            for (Board board : queues) {
-                if (!board.equals(previousSearchNode.getBoard()))
-                    minPQ.insert(new Node(board, move, previousSearchNode));
+        lastNode = new Node[2];
+
+        while (!minPQ.isEmpty() && !minTwinPQ.isEmpty()) {
+            MinPQ<Node> priorityQueue;
+            if (turn == 0)
+                priorityQueue = minPQ;
+            else
+                priorityQueue = minTwinPQ;
+
+            lastNode[turn] = priorityQueue.delMin();
+
+            if (lastNode[turn].board.isGoal()) {
+                isGoal = true;
+                break;
             }
-            previousSearchNode = minPQ.delMin();
-            solution.enqueue(previousSearchNode.getBoard());
-            move++;
-        }
-    }
 
-    // is the initial board solvable?
-    public boolean isSolvable() {
-        //Board twin = board.twin();
-        return true;
-    }
+            Iterable<Board> boards = lastNode[turn].board.neighbors();
 
-    // min number of moves to solve initial board; -1 if no solution
-    public int moves() {
-        return previousSearchNode.getMoves();
-    }
+            Node previous = lastNode[turn].previous;
 
-    private static class Node implements Comparable<Node> {
-
-        private Board board;
-        private int moves;
-        private Node previousSearchNode;
-
-        public Board getBoard() {
-            return board;
-        }
-
-        public int getMoves() {
-            return moves;
-        }
-
-        private Node(Board board, int moves, Node node) {
-            this.board = board;
-            this.moves = moves;
-            this.previousSearchNode = node;
-        }
-
-        public int compareTo(Node node) {
-            int result;
-
-            if (this.board.hamming() < node.board.hamming()) {
-                result = -1;
-            } else if (this.board.hamming() > node.board.hamming()) {
-                result = 1;
-            } else {
-                if (this.board.manhattan() < node.board.manhattan()) {
-                    result = -1;
-                } else if (this.board.manhattan() > node.board.manhattan()) {
-                    result = 1;
-                } else {
-                    result = 0;
+            for (Board board : boards) {
+                if (previous == null || !board.equals(previous.board)) {
+                    priorityQueue.insert(new Node(board, lastNode[turn].moves + 1, lastNode[turn]));
                 }
             }
 
-            return result;
+            turn = 1 - turn;
         }
-    }
-
-    // sequence of boards in a shortest solution; null if no solution
-    public Iterable<Board> solution() {
-        return solution;
     }
 
     public static void main(String[] args) {
@@ -113,6 +76,57 @@ public class Solver {
             StdOut.println("Minimum number of moves = " + solver.moves());
             for (Board board : solver.solution())
                 StdOut.println(board);
+        }
+    }
+
+    // is the initial board solvable?
+    public boolean isSolvable() {
+        return isGoal && turn == 0;
+    }
+
+    // min number of moves to solve initial board; -1 if no solution
+    public int moves() {
+        return lastNode[0].moves;
+    }
+
+    // sequence of boards in a shortest solution; null if no solution
+    public Iterable<Board> solution() {
+        Queue<Board> queues = new Queue<Board>();
+
+        while (lastNode[0] != null) {
+            queues.enqueue(lastNode[0].board);
+            lastNode[0] = lastNode[0].previous;
+        }
+        return queues;
+    }
+
+    private static class Node implements Comparable<Node> {
+
+        private Board board;
+        private Node previous;
+        private int moves;
+        private int manhattan;
+
+        private Node(Board _board, int _moves, Node _node) {
+            this.board = _board;
+            this.previous = _node;
+            this.moves = _moves;
+            manhattan = board.manhattan();
+        }
+
+        @Override
+        public int compareTo(Node that) {
+            if (this.manhattan + this.moves < that.manhattan + that.moves) {
+                return -1;
+            } else if (this.manhattan + this.moves > that.manhattan + that.moves) {
+                return 1;
+            } else if (this.moves > that.moves) {
+                return -1;
+            } else if (this.moves < that.moves) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     }
 }
