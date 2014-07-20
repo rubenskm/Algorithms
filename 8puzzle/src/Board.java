@@ -13,7 +13,7 @@ public class Board {
     // (where blocks[i][j] = block in row i, column j)
     public Board(int[][] blocks) {
         this.N = blocks[0].length;
-        tiles = convertIntToByte(new byte[N][N], blocks);
+        tiles = convertIntToByte(blocks);
 
         initialSetup();
     }
@@ -23,6 +23,15 @@ public class Board {
         tiles = cloneArray(blocks);
 
         initialSetup();
+    }
+
+private static byte[][] cloneArray(byte[][] src) {
+    int length = src.length;
+    byte[][] target = new byte[length][src[0].length];
+    for (int i = 0; i < length; i++) {
+        System.arraycopy(src[i], 0, target[i], 0, src[i].length);
+        }
+    return target;
     }
 
     private void initialSetup() {
@@ -38,13 +47,14 @@ public class Board {
         }
     }
 
-    private byte[][] convertIntToByte(byte[][] _tiles, int[][] blocks) {
+    private byte[][] convertIntToByte(int[][] blocks) {
+        byte[][] values = new byte[N][N];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                _tiles[i][j] = (byte) blocks[i][j];
+                values[i][j] = (byte) blocks[i][j];
             }
         }
-        return _tiles;
+        return values;
     }
 
     // board dimension N
@@ -78,11 +88,11 @@ public class Board {
         if (manhattan == -1) {
 
             int sum = 0;
-            int x,y;
+            int x, y;
 
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    if(tiles[i][j] != 0) {
+                    if (tiles[i][j] != 0) {
                         //Get the position where could store the values when reach goal
                         x = (tiles[i][j] - 1) / N;
                         y = (tiles[i][j] - 1) % N;
@@ -106,7 +116,7 @@ public class Board {
     // a board obtained by exchanging two adjacent blocks in the same row
     public Board twin() {
 
-        byte [][] twin = cloneArray(tiles);
+        byte[][] twin = cloneArray(tiles);
         int line = 0;
 
         if (emptySpaceX == 0) {
@@ -160,24 +170,11 @@ public class Board {
         return queues;
     }
 
-    private Queue<Board> checkNeighbors(Queue<Board> queues, int x, int y) {
-        //If the index not outside array and not reach goal
-        if (!(x < 0) && !(x >= N) && !(y < 0) && !(y >= N)) {
-
-            byte[][] tilesAux = cloneArray(tiles);
-            byte aux = tilesAux[emptySpaceX][emptySpaceY];
-            tilesAux[emptySpaceX][emptySpaceY] = tilesAux[x][y];
-            tilesAux[x][y] = aux;
-            Board board = new Board(tilesAux);
-            queues.enqueue(board);
-        }
-        return queues;
-    }
-
     // string representation of the board (in the output format specified below)
     public String toString() {
         StringBuilder s = new StringBuilder();
-        s.append(N + "\n");
+        s.append(String.format("%d\n", dimension()));
+        //s.append(N + "\n");
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 s.append(String.format("%2d ", tiles[i][j]));
@@ -185,12 +182,5 @@ public class Board {
             s.append("\n");
         }
         return s.toString();
-    }    private static byte[][] cloneArray(byte[][] src) {
-        int length = src.length;
-        byte[][] target = new byte[length][src[0].length];
-        for (int i = 0; i < length; i++) {
-            System.arraycopy(src[i], 0, target[i], 0, src[i].length);
-        }
-        return target;
     }
 }

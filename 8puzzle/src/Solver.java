@@ -3,6 +3,7 @@ public class Solver {
     private Node[] lastNode;
     private boolean isGoal;
     private int turn;
+    private Stack<Board> solutionQueue;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -24,7 +25,7 @@ public class Solver {
         MinPQ<Node> minTwinPQ = new MinPQ<Node>();
 
         minPQ.insert(new Node(initial, 0, null));
-        minTwinPQ.insert(new Node(initial, 0, null));
+        minTwinPQ.insert(new Node(initial.twin(), 0, null));
 
         lastNode = new Node[2];
 
@@ -86,18 +87,33 @@ public class Solver {
 
     // min number of moves to solve initial board; -1 if no solution
     public int moves() {
-        return lastNode[0].moves;
+        if (isSolvable()) {
+            if (lastNode[0] == null)
+                return 0;
+            return lastNode[0].moves;
+        }
+
+        return -1;
     }
 
     // sequence of boards in a shortest solution; null if no solution
     public Iterable<Board> solution() {
-        Queue<Board> queues = new Queue<Board>();
 
-        while (lastNode[0] != null) {
-            queues.enqueue(lastNode[0].board);
-            lastNode[0] = lastNode[0].previous;
+        if (isSolvable()) {
+            if (solutionQueue == null) {
+                solutionQueue = new Stack<Board>();
+                Node node = lastNode[0];
+                while (node != null) {
+                    solutionQueue.push(node.board);
+                    node = node.previous;
+                }
+            }
+
+            return solutionQueue;
+
+        } else {
+            return null;
         }
-        return queues;
     }
 
     private static class Node implements Comparable<Node> {
@@ -107,10 +123,10 @@ public class Solver {
         private int moves;
         private int manhattan;
 
-        private Node(Board _board, int _moves, Node _node) {
-            this.board = _board;
-            this.previous = _node;
-            this.moves = _moves;
+        private Node(Board myBoard, int myMoves, Node myNode) {
+            this.board = myBoard;
+            this.previous = myNode;
+            this.moves = myMoves;
             manhattan = board.manhattan();
         }
 
