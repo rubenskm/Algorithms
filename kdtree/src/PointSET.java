@@ -37,8 +37,8 @@ public class PointSET {
     public Iterable<Point2D> range(RectHV rect) {
         // all points in the set that are inside the rectangle
         Queue<Point2D> points = new Queue<Point2D>();
-        for(Point2D point : set) {
-            if(rect.contains(point))
+        for (Point2D point : set) {
+            if (rect.contains(point))
                 points.enqueue(point);
         }
         return points;
@@ -46,17 +46,14 @@ public class PointSET {
 
     public Point2D nearest(Point2D p) {
         // a nearest neighbor in the set to p; null if set is empty
-        double minDistance = 0;
+        double minLength = 1.0;
         Point2D minDistancePoint = null;
-        if (set.isEmpty()) {
-            return null;
-        }
 
-        for(Point2D point : set) {
-            double distance = point.distanceSquaredTo(p);
-            if (minDistance > distance) {
-                minDistance = distance;
-                minDistancePoint = p;
+        for (Point2D point : set) {
+            final double distance = point.distanceSquaredTo(p);
+            if (distance < minLength) {
+                minLength = distance;
+                minDistancePoint = point;
             }
         }
 
