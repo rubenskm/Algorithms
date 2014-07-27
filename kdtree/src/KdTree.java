@@ -1,7 +1,6 @@
 public class KdTree {
 
     private Node root;
-    private Point2D minDistancePoint;
 
     public KdTree() {
         // construct an empty set of points
@@ -26,7 +25,10 @@ public class KdTree {
     public void insert(Point2D p) {
         // add the point p to the set (if it is not already in the set)
         if (p == null) return;
-        if (contains(p)) return;
+        if (contains(p)) {
+            int i = 0;
+            return;
+        }
 
         root = insert(root, p, true, new RectHV(0, 0, 1, 1));
 
@@ -74,12 +76,10 @@ public class KdTree {
         if (node.point.equals(point)) return true;
 
         int cmp = compare(node, point);
-        if (cmp > 0)
-            return search(point, node.right);
-        else if (cmp < 0)
+        if (cmp < 0)
             return search(point, node.left);
         else
-            return true;
+            return search(point, node.right);
     }
 
     public void draw() {
@@ -113,10 +113,11 @@ public class KdTree {
 
     public Iterable<Point2D> range(RectHV rect) {
         // all points in the set that are inside the rectangle
-        return range(root, rect);
+        Queue<Point2D> points = new Queue<Point2D>();
+        return range(root, rect, points);
     }
 
-    private Iterable<Point2D> range(Node node, RectHV rect) {
+    private Iterable<Point2D> range(Node node, RectHV rect, Queue<Point2D> points) {
         /*
         To find all points contained in a given query rectangle, start at the root and recursively search for points
         in both subtrees using the following pruning rule: if the query rectangle does not intersect the rectangle
@@ -124,7 +125,6 @@ public class KdTree {
         A subtree is searched only if it might contain a point contained in the query rectangle.
          */
         if (node == null) return null;
-        Queue<Point2D> points = new Queue<Point2D>();
 
         if (rect.intersects(node.rect)) {
             if (rect.contains(node.point))
@@ -132,14 +132,14 @@ public class KdTree {
 
             if (node.isVertical) {
                 if (rect.xmin() <= node.point.x())
-                    range(node.left, rect);
+                    range(node.left, rect, points);
                 if (rect.xmax() >= node.point.x())
-                    range(node.right, rect);
+                    range(node.right, rect, points);
             } else {
                 if (rect.ymin() <= node.point.y())
-                    range(node.left, rect);
+                    range(node.left, rect, points);
                 if (rect.ymax() >= node.point.y())
-                    range(node.right, rect);
+                    range(node.right, rect, points);
             }
         }
 
@@ -148,21 +148,43 @@ public class KdTree {
 
     public Point2D nearest(Point2D p) {
         // a nearest neighbor in the set to p; null if set is empty
-        nearest(root, p, root.point.distanceSquaredTo(p));
-        return minDistancePoint;
+        return nearest(root, p, root.point.distanceSquaredTo(p), root.point);
     }
 
-    private void nearest(Node node, Point2D p, double min) {
+    private Point2D nearest(Node node, Point2D p, double min, Point2D nearestPoint) {
+        /*
+        Nearest neighbor search.
+        To find a closest point to a given query point, start at the root and recursively search in both subtrees
+        using the following pruning rule:
+        if the closest point discovered so far is closer than the distance between the query point and the rectangle
+        corresponding to a node, there is no need to explore that node (or its subtrees). That is, a node is searched only if it might contain a point that is
+        closer than the best one found so far. The effectiveness of the pruning rule depends on quickly finding a
+        nearby point.
+        To do this, organize your recursive method so that when there are two possible subtrees to go down, you always
+         choose the subtree that is on the same side of the splitting line as the query point as the first subtree to
+         explore—the closest point found while exploring the first subtree may enable pruning of the second subtree.
+         */
 
-        if (node == null) return;
+        if (node == null) return nearestPoint;
         double distance = node.point.distanceSquaredTo(p);
         if (distance < min) {
-            minDistancePoint = node.point;
+            nearestPoint = node.point;
             min = distance;
-            nearest(node.left, p, min);
-            nearest(node.right, p, min);
-        } else
-            nearest(node.left, p, min);
+        }
+
+        double left = 1;
+        double right = 1;
+
+        if (node.left != null)
+            left = node.left.point.distanceSquaredTo(p);
+
+        if (node.right != null)
+            right = node.right.point.distanceSquaredTo(p);
+
+        if (right < left)
+            return nearest(node.right, p, min, nearestPoint);
+        else
+            return nearest(node.left, p, min, nearestPoint);
     }
 
     private static class Node {
